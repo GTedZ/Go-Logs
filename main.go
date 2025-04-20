@@ -48,6 +48,13 @@ type GoLogger struct {
 
 	LogLevel int
 	LogFile  string
+
+	OnDebug          func(logStr string, message string, errs ...error)
+	OnInfo           func(logStr string, message string, errs ...error)
+	OnImportant      func(logStr string, message string, errs ...error)
+	OnWarn           func(logStr string, message string, errs ...error)
+	OnError          func(logStr string, message string, errs ...error)
+	OnShouldntHappen func(logStr string, message string, errs ...error)
 }
 
 func (logger *GoLogger) DEBUG(message string, err ...error) {
@@ -96,26 +103,34 @@ func (logger *GoLogger) format_DDMMYYYY_HHMMSSMS(time time.Time) string {
 	return fmt.Sprintf("%d/%s/%d %d:%d:%d.%d", time.Day(), logger.leftPad(fmt.Sprint(int(time.Month())), 2, '0'), time.Year(), time.Hour(), time.Minute(), time.Second(), time.UnixMilli()%SECOND)
 }
 
-func (logger *GoLogger) log(level int, str string, errs ...error) {
+func (logger *GoLogger) log(level int, message string, errs ...error) {
+	var cb_func func(logStr string, message string, errs ...error)
+
 	var log_lvl_str = ""
 	switch level {
 	case DEBUG_LVL:
 		log_lvl_str = "DEBUG"
+		cb_func = logger.OnDebug
 	case INFO_LVL:
 		log_lvl_str = "INFO"
+		cb_func = logger.OnInfo
 	case IMPORTANT_LVL:
 		log_lvl_str = "IMPORTANT"
+		cb_func = logger.OnImportant
 	case WARN_LVL:
 		log_lvl_str = "WARN"
+		cb_func = logger.OnWarn
 	case ERROR_LVL:
 		log_lvl_str = "ERROR"
-	case CRITICAL_LVL:
-		log_lvl_str = "CRITICAL"
+		cb_func = logger.OnError
+	// case CRITICAL_LVL:
+	// 	log_lvl_str = "CRITICAL"
 	case SHOULDNT_HAPPEN_LVL:
 		log_lvl_str = "SHOULDNT_HAPPEN"
+		cb_func = logger.OnShouldntHappen
 	}
 
-	str = fmt.Sprintf("[%s] %s: %s\n", log_lvl_str, logger.format_DDMMYYYY_HHMMSSMS(time.Now()), str)
+	str := fmt.Sprintf("[%s] %s: %s\n", log_lvl_str, logger.format_DDMMYYYY_HHMMSSMS(time.Now()), message)
 	for i, err := range errs {
 		errIndex_str := ""
 		if len(errs) > 1 {
@@ -148,6 +163,10 @@ func (logger *GoLogger) log(level int, str string, errs ...error) {
 
 	if logger.LogLevel <= level {
 		logger.appendLogFile(str)
+	}
+
+	if cb_func != nil {
+		cb_func(str, message, errs...)
 	}
 }
 
