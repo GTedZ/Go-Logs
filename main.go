@@ -3,7 +3,6 @@ package gologs
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"golang.org/x/sys/windows"
@@ -39,7 +38,6 @@ const (
 	IMPORTANT_LVL
 	WARN_LVL
 	ERROR_LVL
-	CRITICAL_LVL
 	SHOULDNT_HAPPEN_LVL
 )
 
@@ -81,26 +79,10 @@ func (logger *GoLogger) SHOULDNT_HAPPEN(message string, err ...error) {
 	logger.log(SHOULDNT_HAPPEN_LVL, message, err...)
 }
 
-func (logger *GoLogger) leftPad(str string, padCount int, padStr rune) string {
-	if len(str) >= padCount {
-		return str
-	}
-
-	return strings.Repeat(string(padStr), padCount-len(str)) + str
-}
-
-// func (logger *GoLogger) rightPad(str string, padCount int, padStr rune) string {
-// 	if len(str) >= padCount {
-// 		return str
-// 	}
-
-// 	return str + strings.Repeat(string(padStr), padCount-len(str))
-// }
-
 func (logger *GoLogger) format_DDMMYYYY_HHMMSSMS(time time.Time) string {
 	time = time.UTC()
 
-	return fmt.Sprintf("%d/%s/%d %d:%d:%d.%d", time.Day(), logger.leftPad(fmt.Sprint(int(time.Month())), 2, '0'), time.Year(), time.Hour(), time.Minute(), time.Second(), time.UnixMilli()%SECOND)
+	return fmt.Sprintf("%02d/%02d/%d %02d:%02d:%02d.%03d", time.Day(), int(time.Month()), time.Year(), time.Hour(), time.Minute(), time.Second(), time.UnixMilli()%SECOND)
 }
 
 func (logger *GoLogger) log(level int, message string, errs ...error) {
@@ -123,8 +105,6 @@ func (logger *GoLogger) log(level int, message string, errs ...error) {
 	case ERROR_LVL:
 		log_lvl_str = "ERROR"
 		cb_func = logger.OnError
-	// case CRITICAL_LVL:
-	// 	log_lvl_str = "CRITICAL"
 	case SHOULDNT_HAPPEN_LVL:
 		log_lvl_str = "SHOULDNT_HAPPEN"
 		cb_func = logger.OnShouldntHappen
@@ -150,8 +130,6 @@ func (logger *GoLogger) log(level int, message string, errs ...error) {
 	case WARN_LVL:
 		Color = COLOR_YELLOW
 	case ERROR_LVL:
-		Color = COLOR_RED
-	case CRITICAL_LVL:
 		Color = COLOR_RED
 	case SHOULDNT_HAPPEN_LVL:
 		Color = COLOR_RED
