@@ -90,11 +90,11 @@ func (logger *GoLogger) format_DDMMYYYY_HHMMSSMS(time time.Time) string {
 }
 
 func (logger *GoLogger) Enable() {
-	logger.disabled = true
+	logger.disabled = false
 }
 
 func (logger *GoLogger) Disable() {
-	logger.disabled = false
+	logger.disabled = true
 }
 
 func (logger *GoLogger) log(level int, message string, errs ...error) {
