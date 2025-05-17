@@ -39,9 +39,13 @@ const (
 	WARN_LVL
 	ERROR_LVL
 	SHOULDNT_HAPPEN_LVL
+
+	NOTHING_LVL
 )
 
 type GoLogger struct {
+	disabled bool
+
 	PrintLogsLevel int
 
 	LogLevel int
@@ -85,7 +89,19 @@ func (logger *GoLogger) format_DDMMYYYY_HHMMSSMS(time time.Time) string {
 	return fmt.Sprintf("%02d/%02d/%d %02d:%02d:%02d.%03d", time.Day(), int(time.Month()), time.Year(), time.Hour(), time.Minute(), time.Second(), time.UnixMilli()%SECOND)
 }
 
+func (logger *GoLogger) Enable() {
+	logger.disabled = true
+}
+
+func (logger *GoLogger) Disable() {
+	logger.disabled = false
+}
+
 func (logger *GoLogger) log(level int, message string, errs ...error) {
+	if logger.disabled {
+		return
+	}
+
 	var cb_func func(logStr string, message string, errs ...error)
 
 	var log_lvl_str = ""
